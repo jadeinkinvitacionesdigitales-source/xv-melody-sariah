@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Panel · XV Melody Sariah</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Great+Vibes&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#f6d6dc url(img/acuarela.jpg) center/cover fixed;color:#5e2a3c;font-family:"Cormorant Garamond",Georgia,serif;padding:1.5rem 1rem}
+.caja{max-width:460px;margin:0 auto;padding:1.6rem 1.3rem;border:1px solid rgba(201,160,80,.7);border-radius:18px;background:rgba(255,250,250,.9);
+  box-shadow:0 0 0 6px rgba(255,250,250,.5),0 0 0 7px rgba(201,160,80,.35),0 18px 40px rgba(122,47,72,.15)}
+.corona{display:block;width:70px;margin:0 auto .2rem}
+.nombre{font-family:"Great Vibes",cursive;font-size:2.4rem;color:#7a2f48;text-align:center;margin:0;line-height:1.1}
+h1{font-family:"Cinzel",serif;color:#9a7430;font-size:.95rem;letter-spacing:.2em;text-align:center;margin:.3rem 0 1.2rem}
+label{display:block;font-family:"Cinzel",serif;font-size:.66rem;letter-spacing:.2em;color:#9a7430;margin:1rem 0 .4rem}
+input{width:100%;padding:.8rem;font:inherit;font-size:1.1rem;color:#5e2a3c;background:#fff;border:1px solid rgba(201,160,80,.65);border-radius:10px;outline:none}
+input:focus{border-color:#d97f97;box-shadow:0 0 0 3px rgba(217,127,151,.22)}
+.nums{display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem}
+.nums button{padding:.7rem 0;font:600 1.05rem "Cinzel",serif;color:#7a2f48;background:#fff;border:1px solid rgba(201,160,80,.65);border-radius:10px;cursor:pointer}
+.nums button.on{color:#fff;background:linear-gradient(135deg,#c2577a,#e58fa8);border-color:#c9a050}
+#enlace{margin-top:1.2rem;padding:.8rem;border-radius:10px;background:#fff4f6;border:1px dashed rgba(201,160,80,.7);font-size:.95rem;word-break:break-all;color:#7a2f48;min-height:2.6rem}
+.acciones{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-top:.8rem}
+.acciones a,.acciones button{padding:.8rem .3rem;text-align:center;text-decoration:none;font:700 .72rem "Cinzel",serif;letter-spacing:.08em;color:#fff;border:0;border-radius:999px;cursor:pointer;
+  background:linear-gradient(135deg,#c2577a,#e58fa8 50%,#c2577a);box-shadow:0 6px 16px rgba(194,87,122,.3)}
+.acciones a.oro{color:#5a3a0c;background:linear-gradient(135deg,#b98a35,#f3dc9c 40%,#c9a050 62%,#fff1c9)}
+small{display:block;margin-top:1rem;color:#8a5a6a;font-size:.95rem;text-align:center;font-style:italic}
+</style>
+</head>
+<body>
+<div class="caja">
+  <img class="corona" src="img/corona.webp" alt="">
+  <p class="nombre">Melody Sariah</p>
+  <h1>ENLACES DE INVITADOS</h1>
+  <label for="nom">NOMBRE DEL INVITADO (opcional)</label>
+  <input id="nom" placeholder="Ej.: Familia Pérez">
+  <label>PUESTOS RESERVADOS</label>
+  <div class="nums" id="nums"></div>
+  <label for="otro">OTRA CANTIDAD</label>
+  <input id="otro" type="number" min="1" max="50" inputmode="numeric" placeholder="Ej.: 8">
+  <div id="enlace"></div>
+  <div class="acciones">
+    <button id="copiar">COPIAR</button>
+    <a id="whats" target="_blank" rel="noopener" class="oro">WHATSAPP</a>
+    <a id="ver" target="_blank" rel="noopener">VER</a>
+  </div>
+  <small>Cada enlace muestra el nombre y los puestos en el “Pase real” de la invitación.</small>
+</div>
+<script>
+const base = location.href.replace(/panel\.html.*$/,"").split("?")[0].split("#")[0];
+let p = 2;
+const nums = document.getElementById("nums");
+for(let i=1;i<=6;i++){ const b=document.createElement("button"); b.textContent=i; b.onclick=()=>{p=i;document.getElementById("otro").value="";pinta();}; nums.appendChild(b); }
+function enlace(){
+  const n=document.getElementById("nom").value.trim();
+  const ps=new URLSearchParams(); if(n) ps.set("n",n); ps.set("p",p);
+  return base+"?"+ps.toString();
+}
+function pinta(){
+  [...nums.children].forEach((b,i)=>b.classList.toggle("on",i+1===p));
+  const url=enlace(), n=document.getElementById("nom").value.trim();
+  document.getElementById("enlace").textContent=url;
+  document.getElementById("ver").href=url;
+  const msg=(n?"Hola "+n+", ":"¡Hola! ")+"con mucho cariño te invitamos a los XV Años de Melody Sariah 👑🦋✨ Aquí está tu pase: "+url;
+  document.getElementById("whats").href="https://wa.me/?text="+encodeURIComponent(msg);
+}
+document.getElementById("nom").oninput=pinta;
+document.getElementById("otro").oninput=e=>{const v=parseInt(e.target.value,10); if(v>0){p=v;pinta();}};
+document.getElementById("copiar").onclick=async e=>{
+  try{ await navigator.clipboard.writeText(enlace()); e.target.textContent="¡COPIADO!"; setTimeout(()=>e.target.textContent="COPIAR",1500);}catch(_){}
+};
+pinta();
+</script>
+</body>
+</html>
