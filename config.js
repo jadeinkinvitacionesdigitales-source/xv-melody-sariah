@@ -21,6 +21,8 @@ window.INVITACION = {
   whatsapp: "50767043950",
   // Enlace a una playlist (Spotify, YouTube…) para escucharla; vacío = solo se piden canciones por WhatsApp
   playlist: "",
+  // URL de la hoja de Google (Apps Script, termina en /exec). Vacío = confirmaciones y canciones llegan por WhatsApp.
+  scriptUrl: "",
   // Canción de fondo: p. ej. "audio/cancion.mp3". Vacío = sin botón de música.
   musica: "",
   // Foto principal + 5 fotos alrededor de la invitación (en este orden). Vacío = no se muestran.

@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
-<script src="config.js"></script>
+<script src="config.js?v=2"></script>
 <style>
 :root{
   --rosa:#f6d6dc; --rosa2:#eab3c0; --rosa3:#d97f97; --fucsia:#c2577a; --vino:#7a2f48;
@@ -545,12 +545,26 @@ footer{text-align:center;padding:.5rem 0 2rem;font-family:"Cinzel",serif;font-si
   document.querySelectorAll("input[name=va]").forEach(r=>r.addEventListener("change",()=>{
     q("#cuantosBox").classList.toggle("oculto", q("input[name=va]:checked").value==="no");
   }));
-  q("#rsvp").addEventListener("submit",e=>{
+  // ---- envío a la hoja de Google (si config.scriptUrl está puesto); si no, por WhatsApp ----
+  const SCRIPT = String(C.scriptUrl||"").trim();
+  async function enviar(datos){
+    const r = await fetch(SCRIPT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(datos)});
+    const j = await r.json(); if(!j.ok) throw new Error(j.error||"error"); return j;
+  }
+
+  q("#rsvp").addEventListener("submit",async e=>{
     e.preventDefault();
     const nom = q("#fNombre").value.trim(), aviso=q("#aviso");
     if(!nom){ aviso.textContent="Escribe tu nombre para confirmar ✨"; aviso.hidden=false; q("#fNombre").focus(); return; }
     aviso.hidden=true;
     const va = q("input[name=va]:checked").value==="si", n = parseInt(sel.value,10);
+    if(SCRIPT){
+      const b=q("#rsvp button[type=submit]"); b.disabled=true; aviso.textContent="Enviando…"; aviso.hidden=false;
+      try{ await enviar({action:"rsvp",nombre:nom,asiste:va?"si":"no",personas:va?n:0,puestos:puestos||""});
+        aviso.textContent = va ? "¡Gracias, "+nom+"! Tu asistencia quedó confirmada ✨🦋" : "Gracias por avisarnos, "+nom+". ¡Te extrañaremos! 🌙";
+      }catch(err){ aviso.textContent="No se pudo enviar. Revisa tu conexión e inténtalo de nuevo."; }
+      b.disabled=false; return;
+    }
     const msg = va
       ? "¡Hola! Soy "+nom+". Confirmo mi asistencia a los XV Años de "+C.nombre+" ✨🦋 Asistiremos "+n+(n===1?" persona.":" personas.")
       : "¡Hola! Soy "+nom+". Lamentablemente no podré asistir a los XV Años de "+C.nombre+". ¡Le deseo una noche mágica! 🌙";
@@ -578,11 +592,18 @@ footer{text-align:center;padding:.5rem 0 2rem;font-family:"Cinzel",serif;font-si
 
   // ---- playlist: sugerir canción por WhatsApp ----
   if(C.playlist){ const b=q("#btnPlaylist"); b.href=C.playlist; b.style.display="inline-flex"; }
-  q("#formCancion").addEventListener("submit",e=>{
+  q("#formCancion").addEventListener("submit",async e=>{
     e.preventDefault();
     const c=q("#cCancion").value.trim(), av=q("#cAviso");
     if(!c){ av.textContent="Escribe la canción que quieres escuchar 🎶"; av.hidden=false; q("#cCancion").focus(); return; }
     av.hidden=true;
+    if(SCRIPT){
+      const b=q("#formCancion button[type=submit]"); b.disabled=true; av.textContent="Enviando…"; av.hidden=false;
+      try{ await enviar({action:"cancion",cancion:c,nombre:(q("#fNombre").value||q("#mNombre").value||"").trim()});
+        av.textContent="¡Gracias! «"+c+"» ya está en la playlist 🎶"; q("#cCancion").value="";
+      }catch(err){ av.textContent="No se pudo enviar. Revisa tu conexión e inténtalo de nuevo."; }
+      b.disabled=false; return;
+    }
     window.open(wa("🎶 Sugerencia para la playlist de los XV de "+C.nombre+": "+c),"_blank");
   });
 
