@@ -47,6 +47,9 @@ header h1{font-family:"Great Vibes",cursive;font-weight:400;font-size:44px;color
 .item{background:#fff;border-radius:12px;padding:10px 12px;border-left:4px solid var(--verde);display:flex;justify-content:space-between;gap:10px}
 .item.no{border-left-color:var(--rojo)}
 .item.cancion{border-left-color:var(--oro)}
+.item .der{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:6px}
+.borrar{border:1px solid rgba(194,87,122,.45);background:#fff;color:#c2577a;border-radius:8px;padding:3px 9px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.borrar:disabled{opacity:.5}
 .item .nom{font-weight:700;font-size:19px;line-height:1.2}
 .item .det{font-size:15px;color:#6b5a7d}
 .item .msg{font-size:16px;font-style:italic;color:#3b3352;margin-top:3px}
@@ -189,11 +192,25 @@ header h1{font-family:"Great Vibes",cursive;font-weight:400;font-size:44px;color
     q("#listaRsvp").innerHTML = lista.length ? lista.map(r=>{
       const ok=r.asiste==="si";
       return '<div class="item'+(ok?"":" no")+'"><div><div class="nom">'+esc(r.nombre)+'</div><div class="det">'+fecha(r.fecha)+(r.puestos?' · enlace de '+esc(r.puestos)+' puestos':'')+'</div>'+
-        (r.mensaje?'<div class="msg">“'+esc(r.mensaje)+'”</div>':'')+'</div><div class="num">'+(ok?esc(r.personas)+'<div class="det">'+(Number(r.personas)===1?'persona':'personas')+'</div>':'No asistirá')+'</div></div>';
+        (r.mensaje?'<div class="msg">“'+esc(r.mensaje)+'”</div>':'')+'</div><div class="der"><div class="num">'+(ok?esc(r.personas)+'<div class="det">'+(Number(r.personas)===1?'persona':'personas')+'</div>':'No asistirá')+'</div>'+btnBorrar("rsvp",r.fecha,r.nombre)+'</div></div>';
     }).join("") : '<p class="vacio">Todavía no hay respuestas aquí.</p>';
     const Cn=[...datos.canciones].sort((x,y)=>String(y.fecha).localeCompare(String(x.fecha)));
-    q("#listaCanc").innerHTML = Cn.length ? Cn.map(c=>'<div class="item cancion"><div><div class="nom">'+esc(c.cancion)+'</div><div class="det">'+(c.artista?esc(c.artista)+' · ':'')+(c.nombre?'sugerida por '+esc(c.nombre):'')+'</div></div></div>').join("") : '<p class="vacio">Todavía no hay canciones sugeridas.</p>';
+    q("#listaCanc").innerHTML = Cn.length ? Cn.map(c=>'<div class="item cancion"><div><div class="nom">'+esc(c.cancion)+'</div><div class="det">'+(c.artista?esc(c.artista)+' · ':'')+(c.nombre?'sugerida por '+esc(c.nombre):'')+'</div></div><div class="der">'+btnBorrar("cancion",c.fecha,c.cancion)+'</div></div>').join("") : '<p class="vacio">Todavía no hay canciones sugeridas.</p>';
   }
+  function btnBorrar(tipo,f,texto){ return '<button class="borrar" data-tipo="'+tipo+'" data-fecha="'+esc(f)+'" data-texto="'+esc(texto)+'">🗑 Borrar</button>'; }
+  document.addEventListener("click",async e=>{
+    const b=e.target.closest(".borrar"); if(!b) return;
+    const d=b.dataset;
+    if(!confirm((d.tipo==="cancion"?"¿Borrar la canción «":"¿Borrar la respuesta de «")+d.texto+"»?\nSe borra también de la hoja de Google y no se puede deshacer.")) return;
+    b.disabled=true; b.textContent="Borrando…";
+    try{
+      const r=await fetch(SCRIPT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({action:"borrar",key:localStorage.getItem("panelClaveMelody")||"",tipo:d.tipo,fecha:d.fecha,texto:d.texto})});
+      const j=await r.json();
+      if(j.ok){ toast("Borrado"); cargar(); }
+      else{ toast(j.error==="accion"?"Falta actualizar el Apps Script":j.error==="no-encontrado"?"Ya no estaba en la hoja":"No se pudo borrar"); b.disabled=false; b.textContent="🗑 Borrar"; if(j.error==="no-encontrado") cargar(); }
+    }catch(err){ toast("No se pudo borrar"); b.disabled=false; b.textContent="🗑 Borrar"; }
+  });
   document.querySelectorAll(".pestanas button").forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll(".pestanas button").forEach(x=>x.classList.toggle("on",x===b)); pintar(); });
   q("#buscar").oninput=pintar;
   q("#actualizar").onclick=cargar;
